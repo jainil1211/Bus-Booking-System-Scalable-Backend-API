@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const authRoutes=require('./routes/authRoutes');
+const authRoutes = require('./routes/authRoutes');
 const { protect } = require("./middleware/authMiddleware");
+const busRoutes = require("./routes/busRoutes");
+const routeRoutes = require("./routes/routeRoutes");
+const tripRoutes = require("./routes/tripRoutes");
 
 
 const app = express();
@@ -25,7 +28,10 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/auth",authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/buses", busRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/trips", tripRoutes);
 
 
 module.exports = app;
