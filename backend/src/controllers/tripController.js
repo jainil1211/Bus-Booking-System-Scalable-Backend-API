@@ -366,6 +366,67 @@ const deleteTrip = async (req, res) => {
   }
 };
 
+const searchTrips = async (req, res) => {
+  try {
+    const { source, destination, travelDate } = req.query;
+
+    if (!source || !destination || !travelDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Source, destination and travel date are required",
+      });
+    }
+
+    const startOfDay = new Date(`${travelDate}T00:00:00.000Z`);
+    const endOfDay = new Date(`${travelDate}T23:59:59.999Z`);
+
+    const routes = await Route.find({
+      source: {
+        $regex: `^${source}$`,
+        $options: "i",
+      },
+      destination: {
+        $regex: `^${destination}$`,
+        $options: "i",
+      },
+      isActive: true,
+    }).select("_id");
+
+    const routeIds = routes.map((route) => route._id);
+
+    const trips = await Trip.find({
+      routeId: { $in: routeIds },
+      travelDate: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+      status: "SCHEDULED",
+    })
+      .populate(
+        "busId",
+        "busNumber operator busType seatCapacity amenities"
+      )
+      .populate(
+        "routeId",
+        "source destination stops"
+      )
+      .sort({ departureTime: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: trips.length,
+      data: trips,
+    });
+  } catch (error) {
+    console.error("Search trips error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createTrip,
   getTrips,
@@ -373,4 +434,5 @@ module.exports = {
   updateTrip,
   updateTripStatus,
   deleteTrip,
+  searchTrips,
 };

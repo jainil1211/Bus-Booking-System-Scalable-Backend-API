@@ -7,6 +7,7 @@ const {
   updateTrip,
   updateTripStatus,
   deleteTrip,
+  searchTrips,
 } = require("../controllers/tripController");
 
 const {
@@ -38,6 +39,12 @@ router.get(
   protect,
   adminOnly,
   getTrips
+);
+
+router.get(
+  "/search",
+  protect,
+  searchTrips
 );
 
 // Get trip by ID
