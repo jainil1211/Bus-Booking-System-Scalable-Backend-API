@@ -5,6 +5,7 @@ const { protect } = require("./middleware/authMiddleware");
 const busRoutes = require("./routes/busRoutes");
 const routeRoutes = require("./routes/routeRoutes");
 const tripRoutes = require("./routes/tripRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/buses", busRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/trips", tripRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 
 module.exports = app;

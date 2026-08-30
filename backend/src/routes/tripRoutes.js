@@ -8,6 +8,7 @@ const {
   updateTripStatus,
   deleteTrip,
   searchTrips,
+  getTripSeats,
 } = require("../controllers/tripController");
 
 const {
@@ -45,6 +46,12 @@ router.get(
   "/search",
   protect,
   searchTrips
+);
+
+router.get(
+  "/:tripId/seats",
+  protect,
+  getTripSeats
 );
 
 // Get trip by ID

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Trip = require("../models/Trip");
 const Bus = require("../models/Bus");
 const Route = require("../models/Route");
+const TripSeat = require("../models/TripSeat");
 
 // Create trip
 const createTrip = async (req, res) => {
@@ -98,6 +99,17 @@ const createTrip = async (req, res) => {
       arrivalTime,
       fare,
     });
+    const seats = [];
+
+    for (let seatNumber = 1; seatNumber <= bus.seatCapacity; seatNumber++) {
+      seats.push({
+        tripId: trip._id,
+        seatNumber,
+        status: "AVAILABLE",
+      });
+    }
+
+    await TripSeat.insertMany(seats);
 
     return res.status(201).json({
       success: true,
@@ -427,6 +439,48 @@ const searchTrips = async (req, res) => {
   }
 };
 
+
+const getTripSeats = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(tripId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid trip ID",
+      });
+    }
+
+    const trip = await Trip.findById(tripId);
+
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    const seats = await TripSeat.find({
+      tripId,
+    }).sort({ seatNumber: 1 });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalSeats: seats.length,
+        seats,
+      },
+    });
+  } catch (error) {
+    console.error("Get trip seats error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createTrip,
   getTrips,
@@ -435,4 +489,5 @@ module.exports = {
   updateTripStatus,
   deleteTrip,
   searchTrips,
+  getTripSeats,
 };
