@@ -272,6 +272,8 @@ const cancelBooking = async (req, res) => {
       });
     }
 
+    const oldStatus = booking.status;
+
     // Cancel booking
     booking.status = "CANCELLED";
     booking.cancelledAt = new Date();
@@ -307,6 +309,23 @@ const cancelBooking = async (req, res) => {
       });
     } catch (socketError) {
       console.error("Socket emit error:", socketError);
+    }
+
+    // Send Cancellation Email if it was a CONFIRMED booking
+    if (oldStatus === "CONFIRMED") {
+      try {
+        const populatedBooking = await Booking.findById(booking._id)
+          .populate("userId")
+          .populate({
+            path: "tripId",
+            populate: ["busId", "routeId"]
+          });
+        
+        const { sendCancellationEmail } = require("../services/emailService");
+        await sendCancellationEmail(populatedBooking);
+      } catch (emailError) {
+        console.error("Cancellation email sending failed:", emailError);
+      }
     }
 
     return res.status(200).json({

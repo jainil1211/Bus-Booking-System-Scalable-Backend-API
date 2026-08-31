@@ -184,6 +184,30 @@ const verifyPayment = async (req, res) => {
       console.error("Socket emit error:", socketError);
     }
 
+    // 9. Send Confirmation Email with Idempotency
+    const emailLock = await Booking.findOneAndUpdate(
+      { _id: booking._id, confirmationEmailSent: false },
+      { $set: { confirmationEmailSent: true } }
+    );
+
+    if (emailLock) {
+      try {
+        const populatedBooking = await Booking.findById(booking._id)
+          .populate("userId")
+          .populate({
+            path: "tripId",
+            populate: ["busId", "routeId"]
+          });
+        
+        const { sendConfirmationEmail } = require("../services/emailService");
+        await sendConfirmationEmail(populatedBooking, payment);
+      } catch (emailError) {
+        console.error("Confirmation email sending failed:", emailError);
+        // Revert lock so it can be retried later
+        await Booking.updateOne({ _id: booking._id }, { $set: { confirmationEmailSent: false } });
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Payment verified successfully",
@@ -276,6 +300,30 @@ const webhook = async (req, res) => {
         });
       } catch (socketError) {
         console.error("Socket emit error:", socketError);
+      }
+
+      // Send Confirmation Email with Idempotency
+      const emailLock = await Booking.findOneAndUpdate(
+        { _id: booking._id, confirmationEmailSent: false },
+        { $set: { confirmationEmailSent: true } }
+      );
+
+      if (emailLock) {
+        try {
+          const populatedBooking = await Booking.findById(booking._id)
+            .populate("userId")
+            .populate({
+              path: "tripId",
+              populate: ["busId", "routeId"]
+            });
+          
+          const { sendConfirmationEmail } = require("../services/emailService");
+          await sendConfirmationEmail(populatedBooking, payment);
+        } catch (emailError) {
+          console.error("Confirmation email sending failed:", emailError);
+          // Revert lock so it can be retried later
+          await Booking.updateOne({ _id: booking._id }, { $set: { confirmationEmailSent: false } });
+        }
       }
     }
 
