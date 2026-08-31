@@ -126,6 +126,17 @@ const createBooking = async (req, res) => {
     }
 
     // 8. Booking successfully created with seats locked
+    const { getIO } = require("../config/socket");
+    try {
+      getIO().to(`trip:${trip._id}`).emit("SEAT_UPDATE", {
+        tripId: trip._id,
+        seats: uniqueSeats,
+        status: "LOCKED",
+      });
+    } catch (socketError) {
+      console.error("Socket emit error:", socketError);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Seats locked successfully. Complete payment within 10 minutes.",
@@ -281,6 +292,22 @@ const cancelBooking = async (req, res) => {
         },
       }
     );
+
+    // Trigger waiting list processing to notify/make eligible the next users in queue
+    const { processWaitingListForTrip } = require("../services/waitingListService");
+    await processWaitingListForTrip(booking.tripId);
+
+    // Emit Socket.IO event for released seats
+    const { getIO } = require("../config/socket");
+    try {
+      getIO().to(`trip:${booking.tripId}`).emit("SEAT_UPDATE", {
+        tripId: booking.tripId,
+        seats: booking.seatNumbers,
+        status: "AVAILABLE",
+      });
+    } catch (socketError) {
+      console.error("Socket emit error:", socketError);
+    }
 
     return res.status(200).json({
       success: true,

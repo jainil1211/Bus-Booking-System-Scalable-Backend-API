@@ -60,6 +60,8 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
+bookingSchema.index({ status: 1, createdAt: -1 });
+
 const Booking = mongoose.model("Booking", bookingSchema);
 
 module.exports = Booking;

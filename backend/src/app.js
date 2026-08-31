@@ -6,13 +6,19 @@ const busRoutes = require("./routes/busRoutes");
 const routeRoutes = require("./routes/routeRoutes");
 const tripRoutes = require("./routes/tripRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const waitingListRoutes = require("./routes/waitingListRoutes");
 
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
 
 app.get("/api/test-protected", protect, (req, res) => {
   res.json({
@@ -34,6 +40,8 @@ app.use("/api/buses", busRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/bookings", bookingRoutes);
-
+app.use("/api/payments", paymentRoutes);
+app.use("/api/waiting-list", waitingListRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 module.exports = app;

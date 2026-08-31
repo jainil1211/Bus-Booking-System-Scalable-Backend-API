@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Razorpay Test Checkout</title>
+</head>
+
+<body style="padding: 20px; font-family: sans-serif;">
+    <h2>Test Razorpay Payment</h2>
+    <button id="rzp-button" style="padding: 10px 20px; font-size: 16px;">Open Checkout</button>
+    <pre id="output" style="margin-top: 20px; background: #eee; padding: 10px;"></pre>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        // ⚠️ PASTE YOUR VALUES HERE FROM STEP 1 ⚠️
+        const YOUR_AMOUNT_IN_INR = 500; // Change this to your booking amount
+        const YOUR_ORDER_ID = "order_TW4oFp4PkqpNfn"; // Paste your razorpayOrderId here
+
+        var options = {
+            "key": "rzp_test_TW4WmsIfBZpLvW", // Your test key from .env
+            "amount": YOUR_AMOUNT_IN_INR * 100, // Razorpay takes paise
+            "currency": "INR",
+            "name": "Bus Booking System",
+            "description": "Test Transaction",
+            "order_id": YOUR_ORDER_ID,
+            "handler": function (response) {
+                // This prints the required fields to the screen
+                document.getElementById('output').innerText = JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature
+                }, null, 2);
+            },
+            "prefill": { "name": "Test User", "email": "test@example.com", "contact": "9999999999" }
+        };
+        var rzp = new Razorpay(options);
+        document.getElementById('rzp-button').onclick = function (e) {
+            rzp.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+
+</html>
