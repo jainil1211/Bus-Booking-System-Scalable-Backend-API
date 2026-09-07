@@ -58,7 +58,6 @@ router.get(
 router.get(
   "/:tripId",
   protect,
-  adminOnly,
   getTripById
 );
 
